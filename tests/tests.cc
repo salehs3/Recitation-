@@ -74,3 +74,36 @@ TEST_CASE("Example: Print Prompt Ledger", "[ex-3]") {
   atm.PrintLedger("./prompt.txt", 12345678, 1234);
   REQUIRE(CompareFiles("./ex-1.txt", "./prompt.txt"));
 }
+
+TEST_CASE("RegisterAccount duplicate account", "[RegisterAccount]") {
+  Atm atm;
+
+  atm.RegisterAccount(12345678, 1234, "Saleh", 300.30);
+
+  bool exception_thrown = false;
+
+  try {
+    atm.RegisterAccount(12345678, 1234, "Saleh", 500.00);
+  } catch (...) {
+    exception_thrown = true;
+  }
+
+  REQUIRE(exception_thrown);
+}
+
+TEST_CASE("RegisterAccount duplicate does not change balance",
+          "[RegisterAccount]") {
+  Atm atm;
+
+  atm.RegisterAccount(12345678, 1234, "Messi", 300.30);
+
+  try {
+    atm.RegisterAccount(12345678, 1234, "Messi", 999.99);
+  } catch (...) {
+  }
+
+  auto accounts = atm.GetAccounts();
+  Account sam_account = accounts[{12345678, 1234}];
+
+  REQUIRE(sam_account.balance == 300.30);
+}
