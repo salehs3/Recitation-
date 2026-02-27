@@ -103,7 +103,104 @@ TEST_CASE("RegisterAccount duplicate does not change balance",
   }
 
   auto accounts = atm.GetAccounts();
+  Account account = accounts[{12345678, 1234}];
+
+  REQUIRE(account.balance == 300.30);
+}
+
+TEST_CASE("WithdrawCash updates balance correctly", "[WithdrawCash]") {
+  Atm atm;
+
+  atm.RegisterAccount(12345678, 1234, "x", 300.00);
+  atm.WithdrawCash(12345678, 1234, 50.00);
+
+  auto accounts = atm.GetAccounts();
+  Account xacc = accounts[{12345678, 1234}];
+
+  REQUIRE(xacc.balance == 250.00);
+}
+
+TEST_CASE("Withdraw does not got -ve ", "[WithdrawCash]") {
+  Atm atm;
+
+  atm.RegisterAccount(12345678, 1234, "Messi", 300.30);
+
+  bool exthrow = false;
+
+  try {
+    atm.WithdrawCash(12345678, 1234, 400.00);
+  } catch (...) {
+    exthrow = true;
+  }
+
+  REQUIRE(exthrow);
+}
+
+TEST_CASE("Withdraw does accept -ve ", "[WithdrawCash]") {
+  Atm atm;
+
+  atm.RegisterAccount(12345678, 1234, "Messi", 300.30);
+
+  bool exthrow = false;
+
+  try {
+    atm.WithdrawCash(12345678, 1234, -400.00);
+  } catch (...) {
+    exthrow = true;
+  }
+
+  REQUIRE(exthrow);
+}
+
+TEST_CASE("DepositCash updates balance", "[DepositCash]") {
+  Atm atm;
+
+  atm.RegisterAccount(12345678, 1234, "Sam", 100.00);
+  atm.DepositCash(12345678, 1234, 50.00);
+
+  auto accounts = atm.GetAccounts();
   Account sam_account = accounts[{12345678, 1234}];
 
-  REQUIRE(sam_account.balance == 300.30);
+  REQUIRE(sam_account.balance == 150.00);
+}
+
+TEST_CASE("DepositCash negative amount not allowed", "[DepositCash]") {
+  Atm atm;
+
+  atm.RegisterAccount(12345678, 1234, "Sam", 100.00);
+
+  bool exception_thrown = false;
+
+  try {
+    atm.DepositCash(12345678, 1234, -20.00);
+  } catch (...) {
+    exception_thrown = true;
+  }
+
+  REQUIRE(exception_thrown);
+}
+
+TEST_CASE("PrintLedger invalid account", "[PrintLedger]") {
+  Atm atm;
+
+  bool exception_thrown = false;
+
+  try {
+    atm.PrintLedger("./ledger.txt", 1111, 2222);
+  } catch (...) {
+    exception_thrown = true;
+  }
+
+  REQUIRE(exception_thrown);
+}
+
+TEST_CASE("PrintLedger creates correct file", "[PrintLedger]") {
+  Atm atm;
+
+  atm.RegisterAccount(12345678, 1234, "Sam", 300.30);
+  atm.DepositCash(12345678, 1234, 50.00);
+
+  atm.PrintLedger("./test.txt", 12345678, 1234);
+
+  REQUIRE(CompareFiles("./test.txt", "./test.txt"));
 }
